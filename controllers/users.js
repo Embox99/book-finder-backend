@@ -203,6 +203,22 @@ const removeReadBook = async (req, res, next) => {
   }
 };
 
+const getUserFavorites = async (req, res, next) => {
+  try {
+    res.send({ favoriteBooks: req.user.favoriteBooks });
+  } catch (error) {
+    next(new BadRequestError("Error retrieving favorite books"));
+  }
+};
+
+const getUserReadBooks = async (req, res, next) => {
+  try {
+    res.send({ readBooks: req.user.readBooks });
+  } catch (error) {
+    next(new BadRequestError("Error retrieving read books"));
+  }
+};
+
 module.exports = {
   createUser,
   login,
@@ -212,4 +228,6 @@ module.exports = {
   addReadBook,
   removeFavoriteBook,
   removeReadBook,
+  getUserFavorites,
+  getUserReadBooks,
 };
