@@ -24,6 +24,18 @@ const userSchema = new mongoose.Schema({
     max: 2024,
     select: false,
   },
+  favoriteBooks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Book",
+    },
+  ],
+  readBooks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Book",
+    },
+  ],
 });
 
 userSchema.statics.findUserByCredentials = function findUserByCredentials(
