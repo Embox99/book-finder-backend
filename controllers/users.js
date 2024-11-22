@@ -13,7 +13,7 @@ const createUser = (req, res, next) => {
   const { name, yearOfBirth, email, password } = req.body;
 
   if (!email || !password) {
-    return next(new BadRequestError("Email and password are required"));
+    return next(new BadRequestError(errorMessage.BAD_REQUEST));
   }
 
   if (!validator.isEmail(email)) {
@@ -23,7 +23,7 @@ const createUser = (req, res, next) => {
   return User.findOne({ email })
     .then((existingUser) => {
       if (existingUser) {
-        throw new ConflictError("Email is already used");
+        throw new ConflictError(errorMessage.CONFLICT_EMAIL);
       }
       return bcrypt.hash(password, 10);
     })
@@ -56,7 +56,7 @@ const login = (req, res, next) => {
   }
 
   if (!validator.isEmail(email)) {
-    throw new ConflictError("Email is already used");
+    throw new ConflictError(errorMessage.CONFLICT_EMAIL);
   }
 
   return User.findUserByCredentials(email, password)
@@ -99,7 +99,7 @@ const updateCurrentProfile = async (req, res, next) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser && existingUser._id.toString() !== userId) {
-      throw new ConflictError("Email is already used");
+      throw new ConflictError(errorMessage.CONFLICT_EMAIL);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -109,16 +109,16 @@ const updateCurrentProfile = async (req, res, next) => {
     );
 
     if (!updatedUser) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
     res.send(updatedUser);
   } catch (err) {
     console.error(err);
     if (err.name === "CastError") {
-      next(new BadRequestError("Invalid ID format"));
+      next(new BadRequestError(errorMessage.BAD_REQUEST));
     } else if (err.name === "ValidationError") {
-      next(new BadRequestError("Invalid data provided"));
+      next(new BadRequestError(errorMessage.BAD_REQUEST));
     } else {
       next(err);
     }

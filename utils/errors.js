@@ -1,9 +1,11 @@
 const errorMessage = {
-  badRequest: "Invalid data",
-  idNotFound: "Requested resource not found",
-  defaultError: "An error has occurred on the server",
-  validationError: "Validation failed",
-  authorizationError: "Authorization Required",
+  BAD_REQUEST: "Invalid request data",
+  NOT_FOUND: "Resource not found",
+  SERVER_ERROR: "Internal server error",
+  DATABASE_ERROR: "Database error occurred",
+  UNAUTHORIZED: "Authorization required",
+  FORBIDDEN: "No permisson",
+  CONFLICT_EMAIL: "Email is already used",
 };
 
 module.exports = { errorMessage };
