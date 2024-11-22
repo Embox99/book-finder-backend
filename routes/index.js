@@ -16,7 +16,7 @@ router.use("/users", userRouter);
 router.use("/books", bookRouter);
 
 router.use((req, res, next) =>
-  next(new NotFoundError(errorMessage.idNotFound))
+  next(new NotFoundError(errorMessage.NOT_FOUND))
 );
 
 module.exports = router;
