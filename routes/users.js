@@ -4,10 +4,7 @@ const {
   getCurrentUser,
   updateCurrentProfile,
 } = require("../controllers/users");
-const {
-  validateProfileUpdate,
-  validateUserId,
-} = require("../middlewares/validation");
+const { validateProfileUpdate } = require("../middlewares/validation");
 
 router.use(auth);
 router.get("/me", getCurrentUser);

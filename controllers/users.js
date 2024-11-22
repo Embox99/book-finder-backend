@@ -92,37 +92,37 @@ const getCurrentUser = (req, res, next) => {
     });
 };
 
-const updateCurrentProfile = (req, res, next) => {
-  const { name, email } = req.body;
-  const userId = req.user._id;
+const updateCurrentProfile = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+    const userId = req.user._id;
 
-  User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser && existingUser._id.toString() !== userId) {
-        throw new ConflictError("Email is already used");
-      }
-      return User.findByIdAndUpdate(
-        userId,
-        { name, email },
-        { new: true, runValidators: true }
-      );
-    })
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError(errorMessage.idNotFound);
-      }
-      return res.send(user);
-    })
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        next(new BadRequestError(errorMessage.badRequest));
-      } else if (err.name === "ValidationError") {
-        next(new BadRequestError(errorMessage.badRequest));
-      } else {
-        next(err);
-      }
-    });
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      throw new ConflictError("Email is already used");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, email },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedUser) {
+      throw new NotFoundError("User not found");
+    }
+
+    res.send(updatedUser);
+  } catch (err) {
+    console.error(err);
+    if (err.name === "CastError") {
+      next(new BadRequestError("Invalid ID format"));
+    } else if (err.name === "ValidationError") {
+      next(new BadRequestError("Invalid data provided"));
+    } else {
+      next(err);
+    }
+  }
 };
 
 module.exports = {

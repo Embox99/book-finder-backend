@@ -3,18 +3,18 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
 const helmet = require("helmet");
-const limiter = require("./utils/rateLimitConfig");
 const { errors } = require("celebrate");
+const limiter = require("./utils/rateLimitConfig");
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
 const { errorLogger, requestLogger } = require("./middlewares/logger");
 
 const app = express();
 
-const { PORT = 3001 } = process.env;
+const { PORT = 3001, DATABASE_URL } = process.env;
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/book-finder")
+  .connect(DATABASE_URL)
   .then(() => {
     console.log("Conected to DB");
   })

@@ -1,19 +1,4 @@
 const { Joi, celebrate } = require("celebrate");
-const validator = require("validator");
-
-const validateEmail = (value, helpers) => {
-  if (validator.isEmail(value)) {
-    return value;
-  }
-  return helpers.error("string.uri");
-};
-
-const validateId = (value, helpers) => {
-  if (validator.isHexadecimal(value)) {
-    return value;
-  }
-  return helpers.error("string.uri");
-};
 
 const validateCreateUser = celebrate({
   body: Joi.object().keys({
@@ -22,12 +7,12 @@ const validateCreateUser = celebrate({
       "string.max": 'The maximum length of the "name" field is 30',
       "string.empty": 'The "name" field must be filled in',
     }),
-    yearOfBirth: Joi.string().required().messages({
-      "string.empty": 'The "yearOfBirth" must be filled in',
+    yearOfBirth: Joi.number().required().messages({
+      "any.required": 'The "yearOfBirth" must be filled in',
     }),
-    email: Joi.string().required().custom(validateEmail).messages({
+    email: Joi.string().email().required().messages({
       "string.empty": 'The "email" field must be filled in',
-      "string.uri": 'the "email" field must be a valid email',
+      "string.email": 'the "email" field must be a valid email',
     }),
     password: Joi.string().required().messages({
       "string.empty": 'The "password" field must be filled in',
@@ -37,9 +22,9 @@ const validateCreateUser = celebrate({
 
 const validateLogin = celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().custom(validateEmail).messages({
+    email: Joi.string().email().required().messages({
       "string.empty": 'The "email" field must be filled in',
-      "string.uri": 'the "email" field must be a valid email',
+      "string.email": 'the "email" field must be a valid email',
     }),
     password: Joi.string()
       .required()
@@ -47,24 +32,53 @@ const validateLogin = celebrate({
   }),
 });
 
-const validateUserId = celebrate({
-  params: Joi.object().keys({
-    itemId: Joi.string().length(24).required().custom(validateId).messages({
-      "string.uri": "Must be a hexadecimal value length of 24 characters",
-    }),
-  }),
-});
-
 const validateProfileUpdate = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30).message({
+    name: Joi.string().required().min(2).max(30).messages({
       "string.min": 'The minimum length of the "name" field is 2',
       "string.max": 'The maximum length of the "name" field is 30',
       "string.empty": 'The "name" field must be filled in',
     }),
-    email: Joi.string().required().custom(validateEmail).messages({
+    email: Joi.string().email().required().messages({
       "string.empty": 'The "email" field must be filled in',
-      "string.uri": 'the "email" field must be a valid email',
+      "string.email": 'the "email" field must be a valid email',
+    }),
+  }),
+});
+
+const validateBookAction = celebrate({
+  body: Joi.object().keys({
+    bookId: Joi.string().required().messages({
+      "string.empty": 'The "bookId" field must be filled in',
+    }),
+    title: Joi.string().required().min(1).messages({
+      "string.min": 'The minimum length of the "title" field is 1',
+      "string.empty": 'The "title" field must be filled in',
+    }),
+    author: Joi.string().required().messages({
+      "string.empty": 'The "author" field must be filled in',
+    }),
+    description: Joi.string().optional().allow("").messages({
+      "string.base": 'The "description" field must be a string',
+    }),
+    publishedDate: Joi.string().optional().allow("").messages({
+      "string.base": 'The "publishedDate" field must be a string',
+    }),
+    coverImage: Joi.string().uri().optional().allow("").messages({
+      "string.uri": 'The "coverImage" field must be a valid URI',
+    }),
+    isbn: Joi.string().optional().allow("").messages({
+      "string.base": 'The "isbn" field must be a string',
+    }),
+  }),
+});
+
+const validateBookId = celebrate({
+  params: Joi.object().keys({
+    bookId: Joi.string().required().hex().length(24).messages({
+      "string.empty": 'The "bookId" parameter must be filled in',
+      "string.hex": 'The "bookId" parameter must be a valid hexadecimal string',
+      "string.length": 'The "bookId" parameter must be 24 characters long',
     }),
   }),
 });
@@ -72,6 +86,7 @@ const validateProfileUpdate = celebrate({
 module.exports = {
   validateCreateUser,
   validateLogin,
-  validateUserId,
   validateProfileUpdate,
+  validateBookAction,
+  validateBookId,
 };

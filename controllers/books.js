@@ -1,5 +1,8 @@
-const Book = require("../models/book");
+const Book = require("../models/books");
+const User = require("../models/users");
 const BadRequestError = require("../errors/badRequestError");
+const ForbiddenError = require("../errors/forbiddenError");
+const NotFoundError = require("../errors/notFoundError");
 
 const addFavoriteBook = async (req, res, next) => {
   try {
@@ -13,7 +16,16 @@ const addFavoriteBook = async (req, res, next) => {
       isbn,
     } = req.body;
 
-    let book = await Book.findOne({ bookId });
+    if (!bookId || !title || !author) {
+      throw new BadRequestError("Book ID, title, and author are required");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    let book = await Book.findOne({ bookId, owner: user._id });
     if (!book) {
       book = await Book.create({
         title,
@@ -23,10 +35,10 @@ const addFavoriteBook = async (req, res, next) => {
         coverImage,
         isbn,
         bookId,
+        owner: user._id,
       });
     }
 
-    const user = req.user;
     if (!user.favoriteBooks.includes(book._id)) {
       user.favoriteBooks.push(book._id);
       await user.save();
@@ -39,8 +51,13 @@ const addFavoriteBook = async (req, res, next) => {
       favoriteBooks: user.favoriteBooks,
       readBooks: user.readBooks,
     });
-  } catch (error) {
-    next(new BadRequestError("Error adding book to favorites"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "ValidationError") {
+      next(new BadRequestError("Invalid data provided"));
+    } else {
+      next(err);
+    }
   }
 };
 
@@ -56,7 +73,16 @@ const addReadBook = async (req, res, next) => {
       isbn,
     } = req.body;
 
-    let book = await Book.findOne({ bookId });
+    if (!bookId || !title || !author) {
+      throw new BadRequestError("Book ID, title, and author are required");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    let book = await Book.findOne({ bookId, owner: user._id });
     if (!book) {
       book = await Book.create({
         title,
@@ -66,10 +92,10 @@ const addReadBook = async (req, res, next) => {
         coverImage,
         isbn,
         bookId,
+        owner: user._id,
       });
     }
 
-    const user = req.user;
     if (!user.readBooks.includes(book._id)) {
       user.readBooks.push(book._id);
       await user.save();
@@ -82,19 +108,40 @@ const addReadBook = async (req, res, next) => {
       favoriteBooks: user.favoriteBooks,
       readBooks: user.readBooks,
     });
-  } catch (error) {
-    next(new BadRequestError("Error adding book to read list"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "ValidationError") {
+      next(new BadRequestError("Invalid data provided"));
+    } else {
+      next(err);
+    }
   }
 };
 
 const removeFavoriteBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;
-    const user = req.user;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      throw new NotFoundError("Book not found");
+    }
+
+    if (book.owner.toString() !== req.user._id.toString()) {
+      throw new ForbiddenError("You don’t have permission to delete this book");
+    }
+
     user.favoriteBooks = user.favoriteBooks.filter(
-      (id) => id.toString() !== bookId
+      (id) => id.toString() !== bookId,
     );
     await user.save();
+
+    await Book.findOneAndDelete({ _id: bookId, owner: user._id });
+
     res.send({
       _id: user._id,
       name: user.name,
@@ -102,17 +149,38 @@ const removeFavoriteBook = async (req, res, next) => {
       favoriteBooks: user.favoriteBooks,
       readBooks: user.readBooks,
     });
-  } catch (error) {
-    next(new BadRequestError("Error removing book from favorites"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "CastError") {
+      next(new BadRequestError("Invalid ID format"));
+    } else {
+      next(err);
+    }
   }
 };
 
 const removeReadBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;
-    const user = req.user;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      throw new NotFoundError("Book not found");
+    }
+
+    if (book.owner.toString() !== req.user._id.toString()) {
+      throw new ForbiddenError("You don’t have permission to delete this book");
+    }
+
     user.readBooks = user.readBooks.filter((id) => id.toString() !== bookId);
     await user.save();
+
+    await Book.findOneAndDelete({ _id: bookId, owner: user._id });
+
     res.send({
       _id: user._id,
       name: user.name,
@@ -120,28 +188,49 @@ const removeReadBook = async (req, res, next) => {
       favoriteBooks: user.favoriteBooks,
       readBooks: user.readBooks,
     });
-  } catch (error) {
-    next(new BadRequestError("Error removing book from read list"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "CastError") {
+      next(new BadRequestError("Invalid ID format"));
+    } else {
+      next(err);
+    }
   }
 };
 
 const getUserFavorites = async (req, res, next) => {
   try {
-    const user = req.user;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
     await user.populate("favoriteBooks").execPopulate();
     res.send({ favoriteBooks: user.favoriteBooks });
-  } catch (error) {
-    next(new BadRequestError("Error retrieving favorite books"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "CastError") {
+      next(new BadRequestError("Invalid ID format"));
+    } else {
+      next(err);
+    }
   }
 };
 
 const getUserReadBooks = async (req, res, next) => {
   try {
-    const user = req.user;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
     await user.populate("readBooks").execPopulate();
     res.send({ readBooks: user.readBooks });
-  } catch (error) {
-    next(new BadRequestError("Error retrieving read books"));
+  } catch (err) {
+    console.error(err);
+    if (err.name === "CastError") {
+      next(new BadRequestError("Invalid ID format"));
+    } else {
+      next(err);
+    }
   }
 };
 

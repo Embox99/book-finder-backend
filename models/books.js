@@ -13,6 +13,15 @@ const bookSchema = new mongoose.Schema({
   publishedDate: String,
   coverImage: String,
   isbn: String,
+  bookId: {
+    type: String,
+    required: true,
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const Book = mongoose.model("Book", bookSchema);
