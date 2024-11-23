@@ -2,6 +2,7 @@ const Book = require("../models/books");
 const User = require("../models/users");
 const BadRequestError = require("../errors/badRequestError");
 const NotFoundError = require("../errors/notFoundError");
+const ForbiddenError = require("../errors/forbiddenError");
 const { errorMessage } = require("../utils/errors");
 
 const addBook = async (bookData) => {
@@ -115,6 +116,15 @@ const removeFavoriteBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
+    const book = await Book.findById(bookId);
+    if (!book) {
+      throw new NotFoundError(errorMessage.NOT_FOUND);
+    }
+
+    if (book.owner.toString() !== req.user._id.toString()) {
+      throw new ForbiddenError(errorMessage.FORBIDDEN);
+    }
+
     user.favoriteBooks = user.favoriteBooks.filter(
       (id) => id.toString() !== bookId,
     );
@@ -148,6 +158,15 @@ const removeReadBook = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      throw new NotFoundError(errorMessage.NOT_FOUND);
+    }
+
+    if (book.owner.toString() !== req.user._id.toString()) {
+      throw new ForbiddenError(errorMessage.FORBIDDEN);
     }
 
     user.readBooks = user.readBooks.filter((id) => id.toString() !== bookId);
