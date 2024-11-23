@@ -144,11 +144,11 @@ const removeFavoriteBook = async (req, res, next) => {
     res.send(user);
   } catch (err) {
     console.error(err);
-    next(
-      err.name === "CastError"
-        ? new BadRequestError(errorMessage.BAD_REQUEST)
-        : err,
-    );
+    if (err.name === "CastError") {
+      next(new BadRequestError(errorMessage.BAD_REQUEST));
+    } else {
+      next(err);
+    }
   }
 };
 
@@ -186,11 +186,11 @@ const removeReadBook = async (req, res, next) => {
     res.send(user);
   } catch (err) {
     console.error(err);
-    next(
-      err.name === "CastError"
-        ? new BadRequestError(errorMessage.BAD_REQUEST)
-        : err,
-    );
+    if (err.name === "CastError") {
+      next(new BadRequestError(errorMessage.BAD_REQUEST));
+    } else {
+      next(err);
+    }
   }
 };
 
