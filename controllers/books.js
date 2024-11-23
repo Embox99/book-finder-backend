@@ -43,6 +43,7 @@ const addFavoriteBook = async (req, res, next) => {
       publishedDate,
       coverImage,
       isbn,
+      owner: req.user._id,
     });
 
     if (!user.favoriteBooks.includes(book._id)) {
@@ -90,6 +91,7 @@ const addReadBook = async (req, res, next) => {
       publishedDate,
       coverImage,
       isbn,
+      owner: req.user._id,
     });
 
     if (!user.readBooks.includes(book._id)) {
