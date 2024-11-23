@@ -98,7 +98,7 @@ const updateCurrentProfile = async (req, res, next) => {
     const userId = req.user._id;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser && existingUser._id.toString() !== userId) {
+    if (existingUser) {
       throw new ConflictError(errorMessage.CONFLICT_EMAIL);
     }
 

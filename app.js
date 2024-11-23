@@ -8,10 +8,11 @@ const limiter = require("./utils/rateLimitConfig");
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
 const { errorLogger, requestLogger } = require("./middlewares/logger");
+const config = require("./utils/config");
 
 const app = express();
 
-const { PORT, DATABASE_URL } = process.env;
+const { PORT, DATABASE_URL } = config;
 
 mongoose
   .connect(DATABASE_URL)

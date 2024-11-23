@@ -16,11 +16,7 @@ const bookSchema = new mongoose.Schema({
   bookId: {
     type: String,
     required: true,
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+    unique: true,
   },
 });
 
