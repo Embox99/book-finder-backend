@@ -75,10 +75,8 @@ const validateBookAction = celebrate({
 
 const validateBookId = celebrate({
   params: Joi.object().keys({
-    bookId: Joi.string().required().hex().length(24).messages({
+    bookId: Joi.string().required().messages({
       "string.empty": 'The "bookId" parameter must be filled in',
-      "string.hex": 'The "bookId" parameter must be a valid hexadecimal string',
-      "string.length": 'The "bookId" parameter must be 24 characters long',
     }),
   }),
 });
