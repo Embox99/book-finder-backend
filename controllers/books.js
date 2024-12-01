@@ -110,6 +110,7 @@ const addReadBook = async (req, res, next) => {
   }
 };
 
+
 const removeFavoriteBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;
@@ -118,29 +119,29 @@ const removeFavoriteBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await Book.findById(bookId);
+    const book = await Book.findOne({ bookId });
     if (!book) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    if (book.owner.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError(errorMessage.FORBIDDEN);
+    if (!user.favoriteBooks.includes(book._id)) {
+      throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
     user.favoriteBooks = user.favoriteBooks.filter(
-      (id) => id.toString() !== bookId,
+      (id) => id.toString() !== book._id.toString(),
     );
     await user.save();
 
     const bookUsageCountInFavorites = await User.countDocuments({
-      favoriteBooks: bookId,
+      favoriteBooks: book._id,
     });
     const bookUsageCountInReadBooks = await User.countDocuments({
-      readBooks: bookId,
+      readBooks: book._id,
     });
 
     if (bookUsageCountInFavorites === 0 && bookUsageCountInReadBooks === 0) {
-      await Book.findByIdAndDelete(bookId);
+      await Book.findByIdAndDelete(book._id);
     }
 
     res.send(user);
@@ -162,27 +163,27 @@ const removeReadBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await Book.findById(bookId);
+    const book = await Book.findOne({ bookId });
     if (!book) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    if (book.owner.toString() !== req.user._id.toString()) {
-      throw new ForbiddenError(errorMessage.FORBIDDEN);
+    if (!user.readBooks.includes(book._id)) {
+      throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    user.readBooks = user.readBooks.filter((id) => id.toString() !== bookId);
+    user.readBooks = user.readBooks.filter((id) => id.toString() !== book._id.toString());
     await user.save();
 
     const bookUsageCountInFavorites = await User.countDocuments({
-      favoriteBooks: bookId,
+      favoriteBooks: book._id,
     });
     const bookUsageCountInReadBooks = await User.countDocuments({
-      readBooks: bookId,
+      readBooks: book._id,
     });
 
     if (bookUsageCountInFavorites === 0 && bookUsageCountInReadBooks === 0) {
-      await Book.findByIdAndDelete(bookId);
+      await Book.findByIdAndDelete(book._id);
     }
 
     res.send(user);
@@ -195,6 +196,7 @@ const removeReadBook = async (req, res, next) => {
     }
   }
 };
+
 
 const getUserFavorites = async (req, res, next) => {
   try {
