@@ -81,10 +81,19 @@ const validateBookId = celebrate({
   }),
 });
 
+const validateGoal = celebrate({
+  body: Joi.object().keys({
+    goal: Joi.number().required().messages({
+      "number.base": '"goal" must be a number',
+    }),
+  }),
+});
+
 module.exports = {
   validateCreateUser,
   validateLogin,
   validateProfileUpdate,
   validateBookAction,
   validateBookId,
+  validateGoal,
 };

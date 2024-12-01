@@ -97,16 +97,26 @@ const updateCurrentProfile = async (req, res, next) => {
     const { name, email } = req.body;
     const userId = req.user._id;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new ConflictError(errorMessage.CONFLICT_EMAIL);
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { name, email },
-      { new: true, runValidators: true },
-    );
+    if (email && email !== currentUser.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        throw new ConflictError(errorMessage.CONFLICT_EMAIL);
+      }
+    }
+
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateFields, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedUser) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
@@ -125,9 +135,43 @@ const updateCurrentProfile = async (req, res, next) => {
   }
 };
 
+const getGoal = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+      res.send({ goal: user.goal });
+    })
+    .catch(next);
+};
+
+const setGoal = (req, res, next) => {
+  const { goal } = req.body;
+
+  if (typeof goal !== "number") {
+    throw new BadRequestError("Goal must be a number");
+  }
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { goal },
+    { new: true, runValidators: true },
+  )
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+      res.send({ goal: user.goal });
+    })
+    .catch(next);
+};
+
 module.exports = {
   createUser,
   login,
   getCurrentUser,
   updateCurrentProfile,
+  getGoal,
+  setGoal,
 };

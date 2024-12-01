@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
       ref: "Book",
     },
   ],
+  goal: {
+    type: Number,
+    default: null,
+  },
 });
 
 userSchema.statics.findUserByCredentials = function findUserByCredentials(
