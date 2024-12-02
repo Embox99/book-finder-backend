@@ -29,10 +29,14 @@ const createUser = (req, res, next) => {
     })
     .then((hash) => User.create({ name, yearOfBirth, email, password: hash }))
     .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
       res.status(201).send({
         name: user.name,
         yearOfBirth: user.yearOfBirth,
         email: user.email,
+        token,
       });
     })
     .catch((err) => {
