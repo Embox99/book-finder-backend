@@ -17,8 +17,8 @@ router.use(auth);
 router.get("/me/favorite", getUserFavorites);
 router.get("/me/read", getUserReadBooks);
 router.post("/me/favorite", validateBookAction, addFavoriteBook);
-router.delete("/me/favorite/:bookId", validateBookId, removeFavoriteBook);
+router.delete("/me/favorite/:id", validateBookId, removeFavoriteBook);
 router.post("/me/read", validateBookAction, addReadBook);
-router.delete("/me/read/:bookId", validateBookId, removeReadBook);
+router.delete("/me/read/:id", validateBookId, removeReadBook);
 
 module.exports = router;

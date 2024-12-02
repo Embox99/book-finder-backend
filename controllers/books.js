@@ -2,31 +2,34 @@ const Book = require("../models/books");
 const User = require("../models/users");
 const BadRequestError = require("../errors/badRequestError");
 const NotFoundError = require("../errors/notFoundError");
-const ForbiddenError = require("../errors/forbiddenError");
 const { errorMessage } = require("../utils/errors");
 
 const addBook = async (bookData) => {
-  const { bookId } = bookData;
-  let book = await Book.findOne({ bookId });
-  if (!book) {
-    book = await Book.create(bookData);
+  try {
+    const { id, etag, volumeInfo, owner } = bookData;
+
+    const newBook = await Book.create({
+      id,
+      etag,
+      volumeInfo,
+      owner,
+    });
+
+    return newBook;
+  } catch (err) {
+    throw err;
   }
-  return book;
 };
 
 const addFavoriteBook = async (req, res, next) => {
   try {
-    const {
-      bookId,
-      title,
-      author,
-      description,
-      publishedDate,
-      coverImage,
-      isbn,
-    } = req.body;
-
-    if (!bookId || !title || !author) {
+    const { id, etag, volumeInfo } = req.body;
+    if (
+      !id ||
+      !volumeInfo.title ||
+      !Array.isArray(volumeInfo.authors) ||
+      volumeInfo.authors.length === 0
+    ) {
       throw new BadRequestError(errorMessage.BAD_REQUEST);
     }
 
@@ -35,16 +38,16 @@ const addFavoriteBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await addBook({
-      bookId,
-      title,
-      author,
-      description,
-      publishedDate,
-      coverImage,
-      isbn,
-      owner: req.user._id,
-    });
+    let book = await Book.findOne({ id });
+
+    if (!book) {
+      book = await addBook({
+        id,
+        etag,
+        volumeInfo,
+        owner: req.user._id,
+      });
+    }
 
     if (!user.favoriteBooks.includes(book._id)) {
       user.favoriteBooks.push(book._id);
@@ -53,7 +56,7 @@ const addFavoriteBook = async (req, res, next) => {
 
     res.send(user);
   } catch (err) {
-    console.error(err);
+    console.error("Error in addFavoriteBook:", err);
     next(
       err.name === "ValidationError"
         ? new BadRequestError(errorMessage.BAD_REQUEST)
@@ -64,17 +67,14 @@ const addFavoriteBook = async (req, res, next) => {
 
 const addReadBook = async (req, res, next) => {
   try {
-    const {
-      bookId,
-      title,
-      author,
-      description,
-      publishedDate,
-      coverImage,
-      isbn,
-    } = req.body;
+    const { id, etag, volumeInfo } = req.body;
 
-    if (!bookId || !title || !author) {
+    if (
+      !id ||
+      !volumeInfo.title ||
+      !Array.isArray(volumeInfo.authors) ||
+      volumeInfo.authors.length === 0
+    ) {
       throw new BadRequestError(errorMessage.BAD_REQUEST);
     }
 
@@ -83,16 +83,16 @@ const addReadBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await addBook({
-      bookId,
-      title,
-      author,
-      description,
-      publishedDate,
-      coverImage,
-      isbn,
-      owner: req.user._id,
-    });
+    let book = await Book.findOne({ id });
+
+    if (!book) {
+      book = await addBook({
+        id,
+        etag,
+        volumeInfo,
+        owner: req.user._id,
+      });
+    }
 
     if (!user.readBooks.includes(book._id)) {
       user.readBooks.push(book._id);
@@ -101,7 +101,7 @@ const addReadBook = async (req, res, next) => {
 
     res.send(user);
   } catch (err) {
-    console.error(err);
+    console.error("Error in addReadBook:", err);
     next(
       err.name === "ValidationError"
         ? new BadRequestError(errorMessage.BAD_REQUEST)
@@ -110,16 +110,15 @@ const addReadBook = async (req, res, next) => {
   }
 };
 
-
 const removeFavoriteBook = async (req, res, next) => {
   try {
-    const { bookId } = req.params;
+    const { id } = req.params;
     const user = await User.findById(req.user._id);
     if (!user) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await Book.findOne({ bookId });
+    const book = await Book.findOne({ id });
     if (!book) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
@@ -157,13 +156,13 @@ const removeFavoriteBook = async (req, res, next) => {
 
 const removeReadBook = async (req, res, next) => {
   try {
-    const { bookId } = req.params;
+    const { id } = req.params;
     const user = await User.findById(req.user._id);
     if (!user) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    const book = await Book.findOne({ bookId });
+    const book = await Book.findOne({ id });
     if (!book) {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
@@ -172,7 +171,9 @@ const removeReadBook = async (req, res, next) => {
       throw new NotFoundError(errorMessage.NOT_FOUND);
     }
 
-    user.readBooks = user.readBooks.filter((id) => id.toString() !== book._id.toString());
+    user.readBooks = user.readBooks.filter(
+      (id) => id.toString() !== book._id.toString(),
+    );
     await user.save();
 
     const bookUsageCountInFavorites = await User.countDocuments({
@@ -196,7 +197,6 @@ const removeReadBook = async (req, res, next) => {
     }
   }
 };
-
 
 const getUserFavorites = async (req, res, next) => {
   try {

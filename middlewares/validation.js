@@ -48,35 +48,55 @@ const validateProfileUpdate = celebrate({
 
 const validateBookAction = celebrate({
   body: Joi.object().keys({
-    bookId: Joi.string().required().messages({
-      "string.empty": 'The "bookId" field must be filled in',
+    id: Joi.string().required().messages({
+      "string.empty": 'The "id" field must be filled in',
     }),
-    title: Joi.string().required().min(1).messages({
-      "string.min": 'The minimum length of the "title" field is 1',
-      "string.empty": 'The "title" field must be filled in',
+    etag: Joi.string().optional().allow("").messages({
+      "string.base": 'The "etag" field must be a string',
     }),
-    author: Joi.string().required().messages({
-      "string.empty": 'The "author" field must be filled in',
-    }),
-    description: Joi.string().optional().allow("").messages({
-      "string.base": 'The "description" field must be a string',
-    }),
-    publishedDate: Joi.string().optional().allow("").messages({
-      "string.base": 'The "publishedDate" field must be a string',
-    }),
-    coverImage: Joi.string().uri().optional().allow("").messages({
-      "string.uri": 'The "coverImage" field must be a valid URI',
-    }),
-    isbn: Joi.string().optional().allow("").messages({
-      "string.base": 'The "isbn" field must be a string',
-    }),
+    volumeInfo: Joi.object()
+      .keys({
+        title: Joi.string().required().min(1).messages({
+          "string.min": 'The minimum length of the "title" field is 1',
+          "string.empty": 'The "title" field must be filled in',
+        }),
+        authors: Joi.array().items(Joi.string().required()).messages({
+          "string.empty": "Each author must be a string",
+        }),
+        description: Joi.string().optional().allow("").messages({
+          "string.base": 'The "description" field must be a string',
+        }),
+        publishedDate: Joi.string().optional().allow("").messages({
+          "string.base": 'The "publishedDate" field must be a string',
+        }),
+        imageLinks: Joi.object()
+          .keys({
+            thumbnail: Joi.string().uri().optional().allow("").messages({
+              "string.uri": 'The "thumbnail" field must be a valid URI',
+            }),
+          })
+          .optional(),
+        industryIdentifiers: Joi.array()
+          .items(
+            Joi.object().keys({
+              type: Joi.string().optional().allow("").messages({
+                "string.base": 'The "type" field must be a string',
+              }),
+              identifier: Joi.string().optional().allow("").messages({
+                "string.base": 'The "identifier" field must be a string',
+              }),
+            }),
+          )
+          .optional(),
+      })
+      .required(),
   }),
 });
 
 const validateBookId = celebrate({
   params: Joi.object().keys({
-    bookId: Joi.string().required().messages({
-      "string.empty": 'The "bookId" parameter must be filled in',
+    id: Joi.string().required().messages({
+      "string.empty": 'The "id" parameter must be filled in',
     }),
   }),
 });
