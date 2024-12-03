@@ -78,14 +78,16 @@ const validateBookAction = celebrate({
           .optional(),
         industryIdentifiers: Joi.array()
           .items(
-            Joi.object().keys({
-              type: Joi.string().optional().allow("").messages({
-                "string.base": 'The "type" field must be a string',
-              }),
-              identifier: Joi.string().optional().allow("").messages({
-                "string.base": 'The "identifier" field must be a string',
-              }),
-            }),
+            Joi.object()
+              .keys({
+                type: Joi.string().optional().allow("").messages({
+                  "string.base": 'The "type" field must be a string',
+                }),
+                identifier: Joi.string().optional().allow("").messages({
+                  "string.base": 'The "identifier" field must be a string',
+                }),
+              })
+              .unknown(false),
           )
           .optional(),
       })

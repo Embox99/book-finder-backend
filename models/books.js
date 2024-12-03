@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const bookSchema = new mongoose.Schema(
   {
     kind: { type: String, default: "books#volume" },
-    id: { type: String, required: true, unique: true },
+    id: { type: String, required: true },
     etag: { type: String },
     volumeInfo: {
       title: { type: String, required: true },
@@ -18,6 +18,7 @@ const bookSchema = new mongoose.Schema(
           type: { type: String },
           identifier: { type: String },
         },
+        { _id: false },
       ],
     },
     owner: {
